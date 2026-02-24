@@ -19,13 +19,26 @@
   #appbar {
     background: #2979ff;
     color: white;
-    text-align: center;
-    padding: 14px;
-    font-size: 18px;
-    font-weight: bold;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     flex-shrink: 0;
-    transition: background 0.3s;
   }
+  #appbar-title { font-size: 17px; font-weight: bold; }
+  #level-badge {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    background: rgba(255,255,255,0.2);
+    border-radius: 10px;
+    padding: 4px 10px;
+    transition: background 0.2s;
+  }
+  #level-badge:active { background: rgba(255,255,255,0.35); }
+  #level-emoji { font-size: 18px; }
+  #level-text { font-size: 11px; font-weight: bold; }
   #car-row {
     background: white;
     padding: 10px 20px;
@@ -35,7 +48,6 @@
     box-shadow: 0 2px 4px rgba(0,0,0,0.08);
     flex-shrink: 0;
   }
-  #car-row label { font-weight: bold; font-size: 14px; }
   #car-select {
     padding: 6px 12px;
     border: 1.5px solid #2979ff;
@@ -54,19 +66,12 @@
     color: #e65100;
     border-top: 1px solid #ffe082;
     flex-shrink: 0;
-    min-height: 36px;
   }
-  #map-wrap {
-    flex: 1;
-    padding: 10px;
-    min-height: 0;
-  }
+  #map-wrap { flex: 1; padding: 10px; min-height: 0; }
   #map {
-    width: 100%;
-    height: 100%;
+    width: 100%; height: 100%;
     border-radius: 14px;
     border: 2px solid #2979ff;
-    transition: border-color 0.3s;
   }
   #bottom {
     background: white;
@@ -75,52 +80,104 @@
     box-shadow: 0 -2px 8px rgba(0,0,0,0.08);
   }
   #location-row {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
+    display: flex; align-items: center;
+    justify-content: center; gap: 8px;
     margin-bottom: 14px;
   }
   #location-value {
-    font-size: 22px;
-    font-weight: bold;
-    color: #2979ff;
-    transition: color 0.3s;
+    font-size: 22px; font-weight: bold; color: #2979ff;
   }
   #copy-btn {
-    width: 100%;
-    padding: 16px;
-    background: #fdd835;
-    border: none;
-    border-radius: 12px;
-    font-size: 16px;
-    font-weight: bold;
-    color: #222;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
+    width: 100%; padding: 16px;
+    background: #fdd835; border: none;
+    border-radius: 12px; font-size: 16px;
+    font-weight: bold; color: #222; cursor: pointer;
+    display: flex; align-items: center;
+    justify-content: center; gap: 8px;
     transition: background 0.3s, transform 0.1s;
     -webkit-tap-highlight-color: transparent;
   }
   #copy-btn:active { transform: scale(0.97); }
   #copy-btn.copied { background: #43a047; color: white; }
   #guide-text {
+    text-align: center; font-size: 11px;
+    color: #aaa; margin-top: 8px;
+  }
+
+  /* 레벨업 모달 */
+  #level-modal {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+  }
+  #level-modal.show { display: flex; }
+  #modal-box {
+    background: white;
+    border-radius: 20px;
+    padding: 32px 24px;
     text-align: center;
-    font-size: 11px;
-    color: #aaa;
-    margin-top: 8px;
+    width: 80%;
+    max-width: 320px;
+    animation: popIn 0.3s ease;
+  }
+  @keyframes popIn {
+    from { transform: scale(0.7); opacity: 0; }
+    to   { transform: scale(1);   opacity: 1; }
+  }
+  #modal-emoji { font-size: 64px; }
+  #modal-title { font-size: 22px; font-weight: bold; margin: 10px 0 4px; color: #2979ff; }
+  #modal-sub { font-size: 14px; color: #888; margin-bottom: 20px; }
+  #modal-btn {
+    background: #2979ff; color: white;
+    border: none; border-radius: 10px;
+    padding: 10px 32px; font-size: 16px;
+    font-weight: bold; cursor: pointer;
+  }
+
+  /* 레벨 정보 모달 */
+  #info-modal {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+  }
+  #info-modal.show { display: flex; }
+  #info-box {
+    background: white;
+    border-radius: 20px;
+    padding: 28px 24px;
+    text-align: center;
+    width: 80%;
+    max-width: 320px;
+  }
+  .progress-wrap {
+    background: #eee; border-radius: 8px;
+    height: 10px; margin: 12px 0 6px; overflow: hidden;
+  }
+  .progress-bar {
+    height: 100%; background: #2979ff;
+    border-radius: 8px; transition: width 0.5s ease;
   }
 </style>
 </head>
 <body>
 
-<div id="appbar">🚗 주차 관리 시스템</div>
+<div id="appbar">
+  <div id="appbar-title">🚗 주차 관리 시스템</div>
+  <div id="level-badge" onclick="showInfoModal()">
+    <div id="level-emoji">🅿️</div>
+    <div id="level-text">Lv.1</div>
+  </div>
+</div>
 
 <div id="car-row">
   <span>🚐</span>
-  <label for="car-select">차종 선택:</label>
+  <label for="car-select" style="font-weight:bold;font-size:14px;">차종 선택:</label>
   <select id="car-select">
     <option value="스타리아">스타리아</option>
     <option value="캐스퍼">캐스퍼</option>
@@ -129,14 +186,12 @@
 
 <div id="mode-bar">🗺️ 지도를 탭하면 마커가 변신해요!</div>
 
-<div id="map-wrap">
-  <div id="map"></div>
-</div>
+<div id="map-wrap"><div id="map"></div></div>
 
 <div id="bottom">
   <div id="location-row">
     <span id="location-icon">📍</span>
-    <span id="location-label" style="font-size:16px;color:#555;">목적지:</span>
+    <span style="font-size:16px;color:#555;">목적지:</span>
     <span id="location-value">---</span>
   </div>
   <button id="copy-btn" onclick="copyMessage()">
@@ -146,7 +201,99 @@
   <div id="guide-text">📱 아이폰: 버튼 누른 후 카카오톡 → 채팅창 길게 누르기 → 붙여넣기</div>
 </div>
 
+<!-- 레벨업 모달 -->
+<div id="level-modal">
+  <div id="modal-box">
+    <div>🎉 레벨 업!</div>
+    <div id="modal-emoji">🚗</div>
+    <div id="modal-title">Lv.2 주차 견습생</div>
+    <div id="modal-sub">실행 횟수: 5회</div>
+    <button id="modal-btn" onclick="closeLevelModal()">확인</button>
+  </div>
+</div>
+
+<!-- 레벨 정보 모달 -->
+<div id="info-modal">
+  <div id="info-box">
+    <div id="info-emoji" style="font-size:48px;">🅿️</div>
+    <div id="info-title" style="font-size:20px;font-weight:bold;color:#2979ff;margin:8px 0 4px;"></div>
+    <div id="info-count" style="font-size:13px;color:#888;"></div>
+    <div class="progress-wrap"><div class="progress-bar" id="info-progress"></div></div>
+    <div id="info-next" style="font-size:12px;color:#aaa;margin-bottom:16px;"></div>
+    <button onclick="closeInfoModal()"
+      style="background:#2979ff;color:white;border:none;border-radius:10px;padding:8px 28px;font-size:15px;font-weight:bold;cursor:pointer;">
+      확인
+    </button>
+  </div>
+</div>
+
 <script>
+  const LEVELS = [
+    { min: 0,  level: 1, emoji: '🅿️', title: '주차 초보' },
+    { min: 5,  level: 2, emoji: '🚗', title: '주차 견습생' },
+    { min: 15, level: 3, emoji: '🚙', title: '주차 능숙자' },
+    { min: 30, level: 4, emoji: '🏆', title: '주차 고수' },
+    { min: 50, level: 5, emoji: '👑', title: '주차 전설' },
+  ];
+
+  function getLevelInfo(count) {
+    let info = LEVELS[0];
+    for (const l of LEVELS) { if (count >= l.min) info = l; }
+    return info;
+  }
+
+  function getNextMin(count) {
+    for (const l of LEVELS) { if (l.min > count) return l.min; }
+    return null;
+  }
+
+  // 실행 횟수 증가
+  let launchCount = parseInt(localStorage.getItem('launchCount') || '0');
+  const prevLevel = getLevelInfo(launchCount).level;
+  launchCount++;
+  localStorage.setItem('launchCount', launchCount);
+  const curLevelInfo = getLevelInfo(launchCount);
+
+  // 앱바 레벨 업데이트
+  document.getElementById('level-emoji').textContent = curLevelInfo.emoji;
+  document.getElementById('level-text').textContent = 'Lv.' + curLevelInfo.level;
+
+  // 레벨업 체크
+  if (curLevelInfo.level > prevLevel) {
+    setTimeout(() => {
+      document.getElementById('modal-emoji').textContent = curLevelInfo.emoji;
+      document.getElementById('modal-title').textContent = 'Lv.' + curLevelInfo.level + ' ' + curLevelInfo.title;
+      document.getElementById('modal-sub').textContent = '실행 횟수: ' + launchCount + '회';
+      document.getElementById('level-modal').classList.add('show');
+    }, 800);
+  }
+
+  function closeLevelModal() {
+    document.getElementById('level-modal').classList.remove('show');
+  }
+
+  function showInfoModal() {
+    const info = getLevelInfo(launchCount);
+    const nextMin = getNextMin(launchCount);
+    document.getElementById('info-emoji').textContent = info.emoji;
+    document.getElementById('info-title').textContent = 'Lv.' + info.level + ' ' + info.title;
+    document.getElementById('info-count').textContent = '총 실행 횟수: ' + launchCount + '회';
+    if (nextMin) {
+      const pct = Math.min((launchCount / nextMin) * 100, 100);
+      document.getElementById('info-progress').style.width = pct + '%';
+      document.getElementById('info-next').textContent = '다음 레벨까지 ' + (nextMin - launchCount) + '회 남음';
+    } else {
+      document.getElementById('info-progress').style.width = '100%';
+      document.getElementById('info-next').textContent = '🎉 최고 레벨 달성!';
+    }
+    document.getElementById('info-modal').classList.add('show');
+  }
+
+  function closeInfoModal() {
+    document.getElementById('info-modal').classList.remove('show');
+  }
+
+  // 지도 및 동물 로직
   const animals = [
     { emoji: '📍', name: '일반',   msg: null },
     { emoji: '🐶', name: '강아지', msg: '멍멍! 여기 주차하면 꼬리칠게요!' },
@@ -189,17 +336,12 @@
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(emoji, 25, 25);
-    return L.icon({
-      iconUrl: canvas.toDataURL(),
-      iconSize: [45, 45],
-      iconAnchor: [22, 45],
-      popupAnchor: [0, -45]
-    });
+    return L.icon({ iconUrl: canvas.toDataURL(), iconSize:[45,45], iconAnchor:[22,45], popupAnchor:[0,-45] });
   }
 
   locations.forEach(loc => {
     const marker = L.marker(loc.pos).addTo(map);
-    marker.bindTooltip(loc.name, {sticky: true, direction: 'top'});
+    marker.bindTooltip(loc.name, {sticky:true, direction:'top'});
     marker.on('click', e => {
       L.DomEvent.stopPropagation(e);
       selectedLocation = loc.name;
@@ -207,13 +349,10 @@
       document.getElementById('copy-btn').classList.remove('copied');
       document.getElementById('btn-icon').textContent = '📋';
       document.getElementById('btn-text').textContent = '위치 메시지 복사 (카톡 전송용)';
-
       const a = animals[modeIndex];
       if (a.msg) {
         const hours = Math.floor(Math.random() * 5) + 1;
-        marker.bindPopup(
-          `${a.emoji} <b>${loc.name}</b><br>주차 ${hours}시간 경과<br><small>${a.msg}</small>`
-        ).openPopup();
+        marker.bindPopup(`${a.emoji} <b>${loc.name}</b><br>주차 ${hours}시간 경과<br><small>${a.msg}</small>`).openPopup();
       }
     });
     markers.push(marker);
@@ -231,13 +370,10 @@
   });
 
   function copyMessage() {
-    if (selectedLocation === '---') {
-      alert('지도에서 위치를 먼저 선택해주세요.');
-      return;
-    }
+    if (selectedLocation === '---') { alert('지도에서 위치를 먼저 선택해주세요.'); return; }
     const car = document.getElementById('car-select').value;
     const a = animals[modeIndex];
-    const animalMessages = {
+    const msgs = {
       '일반':   `[${car}] 🚗 주차 위치: ${selectedLocation}\n다음 운전자는 이곳으로 이동 바랍니다.`,
       '강아지': `[${car}] 🐶 멍멍! ${selectedLocation}에 주차했어요!\n꼬리치며 기다릴게요 🐾`,
       '고양이': `[${car}] 🐱 냥~ ${selectedLocation} 내 구역이에요.\n조심히 오세요 😼`,
@@ -249,28 +385,21 @@
       '타조':   `[${car}] 🦤 ${selectedLocation} 빠른 타조도 여기서 멈췄어요.\n서둘러 오세요 💨`,
       '염소':   `[${car}] 🐐 메에~ 험한 길 헤치고 ${selectedLocation} 도착!\n용기내서 오세요 🏔️`,
     };
-    const msg = animalMessages[a.name] || animalMessages['일반'];
-
+    const msg = msgs[a.name] || msgs['일반'];
     const input = document.createElement('input');
-    input.setAttribute('type', 'text');
-    input.setAttribute('readonly', '');
+    input.setAttribute('type','text'); input.setAttribute('readonly','');
     input.value = msg;
     input.style.cssText = 'position:fixed;top:0;left:0;width:2em;height:2em;padding:0;border:none;outline:none;box-shadow:none;background:transparent;font-size:16px;opacity:0;';
     document.body.appendChild(input);
-    input.focus();
-    input.setSelectionRange(0, 9999);
-
+    input.focus(); input.setSelectionRange(0,9999);
     let success = false;
     try { success = document.execCommand('copy'); } catch(e) {}
     document.body.removeChild(input);
-
     if (!success && navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(msg).then(showCopied).catch(() => {
-        alert('복사 실패. 직접 복사해주세요:\n' + msg);
-      });
+      navigator.clipboard.writeText(msg).then(showCopied).catch(() => alert('복사 실패.\n' + msg));
       return;
     }
-    success ? showCopied() : alert('복사 실패. 직접 복사해주세요:\n' + msg);
+    success ? showCopied() : alert('복사 실패.\n' + msg);
   }
 
   function showCopied() {
