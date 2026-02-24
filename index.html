@@ -85,6 +85,7 @@
     font-size: 22px;
     font-weight: bold;
     color: #2979ff;
+    transition: color 0.3s;
   }
   #copy-btn {
     width: 100%;
@@ -196,7 +197,6 @@
     });
   }
 
-  // 마커 생성
   locations.forEach(loc => {
     const marker = L.marker(loc.pos).addTo(map);
     marker.bindTooltip(loc.name, {sticky: true, direction: 'top'});
@@ -208,7 +208,6 @@
       document.getElementById('btn-icon').textContent = '📋';
       document.getElementById('btn-text').textContent = '위치 메시지 복사 (카톡 전송용)';
 
-      // 동물 모드면 팝업 표시
       const a = animals[modeIndex];
       if (a.msg) {
         const hours = Math.floor(Math.random() * 5) + 1;
@@ -220,16 +219,11 @@
     markers.push(marker);
   });
 
-  // 지도 탭 → 다음 동물 모드로
   map.on('click', () => {
     modeIndex = (modeIndex + 1) % animals.length;
     const a = animals[modeIndex];
-
-    // 모드바 업데이트
     document.getElementById('mode-bar').textContent =
       modeIndex === 0 ? '🗺️ 일반 모드' : `${a.emoji} ${a.name} 모드 활성화!`;
-
-    // 마커 아이콘 업데이트
     markers.forEach(m => {
       m.setIcon(modeIndex === 0 ? new L.Icon.Default() : makeEmojiIcon(a.emoji));
       if (m.getPopup()) m.closePopup();
@@ -243,8 +237,19 @@
     }
     const car = document.getElementById('car-select').value;
     const a = animals[modeIndex];
-    const animalTag = a.msg ? ` ${a.emoji}` : '';
-    const msg = `[${car}] 주차 위치: ${selectedLocation}${animalTag}\n다음 운전자는 이곳으로 이동 바랍니다.`;
+    const animalMessages = {
+      '일반':   `[${car}] 🚗 주차 위치: ${selectedLocation}\n다음 운전자는 이곳으로 이동 바랍니다.`,
+      '강아지': `[${car}] 🐶 멍멍! ${selectedLocation}에 주차했어요!\n꼬리치며 기다릴게요 🐾`,
+      '고양이': `[${car}] 🐱 냥~ ${selectedLocation} 내 구역이에요.\n조심히 오세요 😼`,
+      '돼지':   `[${car}] 🐷 꿀꿀~ ${selectedLocation} 맛있는 자리 찾았다!\n얼른 오세요 🍖`,
+      '소':     `[${car}] 🐮 음메~ ${selectedLocation} 넓은 자리 딱이네요.\n천천히 오세요 🌾`,
+      '곰':     `[${car}] 🐻 으르렁! ${selectedLocation} 곰이 점령했습니다.\n각오하고 오세요 🍯`,
+      '토끼':   `[${car}] 🐰 깡충! ${selectedLocation}까지 뛰어왔어요.\n빨리 오세요 🥕`,
+      '닭':     `[${car}] 🐔 꼬끼오~ 새벽부터 ${selectedLocation} 자리 맡았어요!\n늦지 마세요 🌅`,
+      '타조':   `[${car}] 🦤 ${selectedLocation} 빠른 타조도 여기서 멈췄어요.\n서둘러 오세요 💨`,
+      '염소':   `[${car}] 🐐 메에~ 험한 길 헤치고 ${selectedLocation} 도착!\n용기내서 오세요 🏔️`,
+    };
+    const msg = animalMessages[a.name] || animalMessages['일반'];
 
     const input = document.createElement('input');
     input.setAttribute('type', 'text');
