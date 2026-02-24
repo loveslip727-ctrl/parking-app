@@ -8,7 +8,6 @@
 <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.js"></script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-
   body {
     font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
     background: #f5f6fa;
@@ -17,7 +16,6 @@
     flex-direction: column;
     overflow: hidden;
   }
-
   #appbar {
     background: #2979ff;
     color: white;
@@ -28,7 +26,6 @@
     flex-shrink: 0;
     transition: background 0.3s;
   }
-
   #car-row {
     background: white;
     padding: 10px 20px;
@@ -47,47 +44,18 @@
     background: white;
     color: #222;
     cursor: pointer;
-    transition: border-color 0.3s;
   }
-
-  #toggle-row {
-    background: white;
-    padding: 10px 20px;
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    border-top: 1px solid #eee;
+  #mode-bar {
+    background: #fff8e1;
+    padding: 8px 20px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: bold;
+    color: #e65100;
+    border-top: 1px solid #ffe082;
     flex-shrink: 0;
+    min-height: 36px;
   }
-  #toggle-label { font-size: 14px; font-weight: bold; flex: 1; }
-  #toggle-sub { font-size: 12px; color: #888; }
-
-  .toggle-switch {
-    position: relative;
-    width: 50px;
-    height: 28px;
-    flex-shrink: 0;
-  }
-  .toggle-switch input { opacity: 0; width: 0; height: 0; }
-  .slider {
-    position: absolute; inset: 0;
-    background: #ccc;
-    border-radius: 28px;
-    cursor: pointer;
-    transition: background 0.3s;
-  }
-  .slider:before {
-    content: '';
-    position: absolute;
-    width: 22px; height: 22px;
-    left: 3px; top: 3px;
-    background: white;
-    border-radius: 50%;
-    transition: transform 0.3s;
-  }
-  input:checked + .slider { background: #ff6f00; }
-  input:checked + .slider:before { transform: translateX(22px); }
-
   #map-wrap {
     flex: 1;
     padding: 10px;
@@ -100,7 +68,6 @@
     border: 2px solid #2979ff;
     transition: border-color 0.3s;
   }
-
   #bottom {
     background: white;
     padding: 16px 20px 20px;
@@ -114,15 +81,11 @@
     gap: 8px;
     margin-bottom: 14px;
   }
-  #location-icon { font-size: 22px; }
-  #location-label { font-size: 16px; color: #555; }
   #location-value {
     font-size: 22px;
     font-weight: bold;
     color: #2979ff;
-    transition: color 0.3s;
   }
-
   #copy-btn {
     width: 100%;
     padding: 16px;
@@ -142,18 +105,12 @@
   }
   #copy-btn:active { transform: scale(0.97); }
   #copy-btn.copied { background: #43a047; color: white; }
-
   #guide-text {
     text-align: center;
     font-size: 11px;
     color: #aaa;
     margin-top: 8px;
   }
-
-  body.nureongi #appbar { background: #e65100; }
-  body.nureongi #car-select { border-color: #e65100; }
-  body.nureongi #map { border-color: #e65100; }
-  body.nureongi #location-value { color: #e65100; }
 </style>
 </head>
 <body>
@@ -169,16 +126,7 @@
   </select>
 </div>
 
-<div id="toggle-row">
-  <div>
-    <div id="toggle-label">📍 일반 지도 모드</div>
-    <div id="toggle-sub">표준 마커로 위치를 표시합니다.</div>
-  </div>
-  <label class="toggle-switch">
-    <input type="checkbox" id="mode-toggle">
-    <span class="slider"></span>
-  </label>
-</div>
+<div id="mode-bar">🗺️ 지도를 탭하면 마커가 변신해요!</div>
 
 <div id="map-wrap">
   <div id="map"></div>
@@ -187,7 +135,7 @@
 <div id="bottom">
   <div id="location-row">
     <span id="location-icon">📍</span>
-    <span id="location-label">목적지:</span>
+    <span id="location-label" style="font-size:16px;color:#555;">목적지:</span>
     <span id="location-value">---</span>
   </div>
   <button id="copy-btn" onclick="copyMessage()">
@@ -198,78 +146,94 @@
 </div>
 
 <script>
-  const DOG_ICON_URL = 'https://cdn-icons-png.flaticon.com/512/616/616408.png';
-
-  // 지하주차장 기준 직선거리 가까운 순 정렬 / 이름 A공터 형식
-  const locations = [
-    {name:"지하주차장", pos:[37.476878, 126.523374]},
-    {name:"A공터",     pos:[37.476729, 126.522995]}, // 약 45m
-    {name:"B공터",     pos:[37.476613, 126.524049]}, // 약 80m
-    {name:"C공터",     pos:[37.476240, 126.523416]},  // 약 81m
-    {name:"D공터",     pos:[37.476385, 126.522816]}, // 약 83m
-    {name:"E공터",     pos:[37.476242, 126.523775]}, // 약 83m
-    {name:"F공터",     pos:[37.476059, 126.523025]}, // 약 99m
-    {name:"G공터",     pos:[37.476638, 126.522514]}, // 약 99m
-    {name:"H공터",     pos:[37.47589,  126.523507]}, // 약 111m
-    {name:"I공터",     pos:[37.475827, 126.523229]}, // 약 122m (교차로에서 5m 이동)
-    {name:"J공터",     pos:[37.475652, 126.523681]}  // 약 140m
+  const animals = [
+    { emoji: '📍', name: '일반',   msg: null },
+    { emoji: '🐶', name: '강아지', msg: '멍멍! 여기 주차하면 꼬리칠게요!' },
+    { emoji: '🐱', name: '고양이', msg: '냥~ 여기 내 구역이에요.' },
+    { emoji: '🐷', name: '돼지',   msg: '꿀꿀~ 맛있는 자리 찾았다!' },
+    { emoji: '🐮', name: '소',     msg: '음메~ 이 넓은 자리 딱이네요.' },
+    { emoji: '🐻', name: '곰',     msg: '으르렁! 곰이 점령한 구역입니다.' },
+    { emoji: '🐰', name: '토끼',   msg: '깡충깡충! 여기까지 뛰어왔어요.' },
+    { emoji: '🐔', name: '닭',     msg: '꼬끼오~ 새벽부터 자리 맡았어요.' },
+    { emoji: '🦤', name: '타조',   msg: '빠른 타조도 이 자리는 못 지나쳐요.' },
+    { emoji: '🐐', name: '염소',   msg: '메에~ 험한 길도 여기까지 왔어요.' },
   ];
 
+  let modeIndex = 0;
   let selectedLocation = '---';
-  let isNureongi = false;
-  let isDogMode = false;
   let markers = [];
 
   const map = L.map('map').setView([37.4763, 126.5233], 17);
   L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-  const dogIcon = L.icon({
-    iconUrl: DOG_ICON_URL,
-    iconSize: [45, 45],
-    iconAnchor: [22, 45],
-    popupAnchor: [0, -45]
-  });
+  const locations = [
+    {name:"지하주차장", pos:[37.476878, 126.523374]},
+    {name:"A공터",     pos:[37.476729, 126.522995]},
+    {name:"B공터",     pos:[37.476613, 126.524049]},
+    {name:"C공터",     pos:[37.47615,  126.523360]},
+    {name:"D공터",     pos:[37.476385, 126.522816]},
+    {name:"E공터",     pos:[37.476242, 126.523775]},
+    {name:"F공터",     pos:[37.476059, 126.523025]},
+    {name:"G공터",     pos:[37.476638, 126.522514]},
+    {name:"H공터",     pos:[37.47589,  126.523507]},
+    {name:"I공터",     pos:[37.475827, 126.523229]},
+    {name:"J공터",     pos:[37.475652, 126.523681]}
+  ];
 
-  function addMarkers(nureongi) {
-    markers.forEach(m => map.removeLayer(m));
-    markers = [];
-    locations.forEach(loc => {
-      const marker = L.marker(loc.pos, nureongi ? {icon: dogIcon} : {}).addTo(map);
-      marker.bindTooltip(loc.name, {sticky: true, direction: 'top'});
-      marker.on('click', e => {
-        L.DomEvent.stopPropagation(e);
-        selectLocation(loc.name);
-      });
-      markers.push(marker);
+  function makeEmojiIcon(emoji) {
+    const canvas = document.createElement('canvas');
+    canvas.width = 50; canvas.height = 50;
+    const ctx = canvas.getContext('2d');
+    ctx.font = '38px serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(emoji, 25, 25);
+    return L.icon({
+      iconUrl: canvas.toDataURL(),
+      iconSize: [45, 45],
+      iconAnchor: [22, 45],
+      popupAnchor: [0, -45]
     });
   }
 
-  // 지도 아무데나 탭 → 개 마커 토글
-  map.on('click', function() {
-    isDogMode = !isDogMode;
+  // 마커 생성
+  locations.forEach(loc => {
+    const marker = L.marker(loc.pos).addTo(map);
+    marker.bindTooltip(loc.name, {sticky: true, direction: 'top'});
+    marker.on('click', e => {
+      L.DomEvent.stopPropagation(e);
+      selectedLocation = loc.name;
+      document.getElementById('location-value').textContent = loc.name;
+      document.getElementById('copy-btn').classList.remove('copied');
+      document.getElementById('btn-icon').textContent = '📋';
+      document.getElementById('btn-text').textContent = '위치 메시지 복사 (카톡 전송용)';
+
+      // 동물 모드면 팝업 표시
+      const a = animals[modeIndex];
+      if (a.msg) {
+        const hours = Math.floor(Math.random() * 5) + 1;
+        marker.bindPopup(
+          `${a.emoji} <b>${loc.name}</b><br>주차 ${hours}시간 경과<br><small>${a.msg}</small>`
+        ).openPopup();
+      }
+    });
+    markers.push(marker);
+  });
+
+  // 지도 탭 → 다음 동물 모드로
+  map.on('click', () => {
+    modeIndex = (modeIndex + 1) % animals.length;
+    const a = animals[modeIndex];
+
+    // 모드바 업데이트
+    document.getElementById('mode-bar').textContent =
+      modeIndex === 0 ? '🗺️ 일반 모드' : `${a.emoji} ${a.name} 모드 활성화!`;
+
+    // 마커 아이콘 업데이트
     markers.forEach(m => {
-      m.setIcon(isDogMode ? dogIcon : new L.Icon.Default());
+      m.setIcon(modeIndex === 0 ? new L.Icon.Default() : makeEmojiIcon(a.emoji));
+      if (m.getPopup()) m.closePopup();
     });
-  });
-
-  function selectLocation(name) {
-    selectedLocation = name;
-    document.getElementById('location-value').textContent = name;
-    const btn = document.getElementById('copy-btn');
-    btn.classList.remove('copied');
-    document.getElementById('btn-icon').textContent = '📋';
-    document.getElementById('btn-text').textContent = '위치 메시지 복사 (카톡 전송용)';
-  }
-
-  // 모드 토글 (토글 스위치 - 기존 기능 유지)
-  document.getElementById('mode-toggle').addEventListener('change', function() {
-    isNureongi = this.checked;
-    document.body.classList.toggle('nureongi', isNureongi);
-    document.getElementById('toggle-label').textContent = isNureongi ? '🐕 안내 모드 활성화' : '📍 일반 지도 모드';
-    document.getElementById('toggle-sub').textContent = isNureongi ? '강아지 마커가 명당을 안내합니다.' : '표준 마커로 위치를 표시합니다.';
-    document.getElementById('location-icon').textContent = isNureongi ? '🐾' : '📍';
-    isDogMode = false; // 토글 바꾸면 탭 토글 초기화
-    addMarkers(isNureongi);
   });
 
   function copyMessage() {
@@ -278,9 +242,9 @@
       return;
     }
     const car = document.getElementById('car-select').value;
-    const msg = isNureongi
-      ? `[${car}] 주차 안내: ${selectedLocation} (명당🐕)`
-      : `[${car}] 주차 위치: ${selectedLocation} (확인 요망)`;
+    const a = animals[modeIndex];
+    const animalTag = a.msg ? ` ${a.emoji}` : '';
+    const msg = `[${car}] 주차 위치: ${selectedLocation}${animalTag}\n다음 운전자는 이곳으로 이동 바랍니다.`;
 
     const input = document.createElement('input');
     input.setAttribute('type', 'text');
@@ -311,7 +275,6 @@
     document.getElementById('btn-text').textContent = '복사 완료! → 카톡에 붙여넣기 하세요';
   }
 
-  addMarkers(false);
   setTimeout(() => map.invalidateSize(), 300);
 </script>
 </body>
